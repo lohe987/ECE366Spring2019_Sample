@@ -52,7 +52,7 @@ def main():
     for line in file:
         if (line == "\n"):
             continue    # Skip empty lines
-        instr = bin(int(line[2:],16))[2:].zfill(32)
+        instr = bin(int(line[2:10],16))[2:].zfill(32)
         #  'zfill' pads the string with 0's to normalize instruction's length of 32
 
         processInstr(instr)
