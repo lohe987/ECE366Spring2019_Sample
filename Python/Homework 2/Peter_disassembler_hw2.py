@@ -72,9 +72,9 @@ def main():
 	for line in inputFile:
 		if ( line == "\n" or line[0] =='#' ):              # empty lines and comments ignored
 			continue
-		for index in line:			#This loop will remove any comments. 
-			if ( line[index] == "#" ):
-				line = line[:index] 
+#		for index in line:			#This loop will remove any comments. 
+#			if ( line[index] == "#" ):
+#				line = line[:index] 
 		line = line.replace( '\n', '' )	# Removes new line characters
 		line = format( int( line, 16 ), "032b" )	# The int function converts the hex instruction into some numerical value, then format converts it into a binary string 
 		instructions.append( line )
