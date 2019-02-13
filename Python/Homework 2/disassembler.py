@@ -52,10 +52,13 @@ def main():
     for line in file:
         if (line == "\n"):
             continue    # Skip empty lines
+
+        line.replace("\n", "")  # get rid of linebreak
         instr = bin(int(line[2:10],16))[2:].zfill(32)
         #  'zfill' pads the string with 0's to normalize instruction's length of 32
 
-        print("instruction in hex:" + line + "bin:" + instr)
+        print("\nhex:" + line)
+        print("bin:" + instr)
         print(instr[0:4]+ " " +instr[4:8] + " " + instr[8:12] + " " + instr[12:16]+ " " + instr[16:20]+ " "+ instr[20:24]+ " "+ instr[24:28]+ " "+ instr[28:32])
 
         processInstr(instr)
