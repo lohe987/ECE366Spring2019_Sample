@@ -1,10 +1,13 @@
-# ECE366Spring2019_Sample
-## This Github repository's main purpose is to provide examples Python,MIPs programs to ECE 366 students.  
+# ECE366 Project 2 Sample
+## To aid students with Project 2, here are the sample simulators with supported instructions ORI,ADDI,SUB,BEQ
 Instructor: Wenjing Rao.  
-Grad TA : Trung Le.  
-Undergrad TA : Jenshin (Peter) Chen.
+Grad TA's version: sim.py,  program.txt  
+````
+To run simulator on Terminal  :  python sim_TRUNG.py
+````
 
-.gitignore: tells git which files (usually local temp or non-text files) to ignore (i.e., not bother looking at)
+
+
 
 
 
