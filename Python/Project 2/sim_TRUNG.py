@@ -66,7 +66,7 @@ def simulate(memory, I):
    
 
 def main():
-    filename = "program.txt"
+    filename = "program_TRUNG.txt"
     print("Reading in machine code from " + filename)
     file = open(filename,"r")
     memory = [0 for i in range(1000)]     # The memory of the machine
