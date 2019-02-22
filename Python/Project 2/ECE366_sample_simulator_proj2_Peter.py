@@ -16,41 +16,41 @@ def simulate( instructions, instructionsHex, debugMode ):
 	#memory = [0 for i in range( memSize )]
 	programDone = False
 	PC = 0		#program counter 
-	DIC = 0 	#dynamic instruction count
-	fetch = instructions[PC] 
+	DIC = 0 	#dynamic instruction count 
 
 	print( "Starting simulation..." )
 	while ( not( programDone ) ):
-		if ( fetch == "00010000000000001111111111111111" ):
+		fetch = instructions[PC]
+		if ( fetch[0:32] == "00010000000000001111111111111111" ):
 			programDone = True
 			DIC += 1
 		elif ( fetch[0:6] == "001000" ):	#addi
 			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) ) #range of number for 16 bit unsigned is 0 to 65535
 			if ( debugMode ):
-				print( "PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "addi $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
+				print( "PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "addi $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
 			PC += 1
 			DIC += 1
 			registers[int(fetch[11:16], 2)] = registers[int(fetch[6:11], 2)] + imm
 		elif ( fetch[0:6] == "001101" ):	#ori
 			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) ) #range of number for 16 bit unsigned is 0 to 65535
 			if ( debugMode ):
-				print("PC =" + str(PC*4) + " Instruction: 0x" +  InstructionHex[PC] + " :" + "ori $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
+				print("PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "ori $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
 			imm = int( fetch[16:32],2 )	#I'm basically ignoring the fact that this could be a negative number since it we're zero-extending it.
 			PC += 1
 			DIC += 1
 			registers[int(fetch[11:16], 2)] = registers[int(fetch[6:11], 2)] | imm
 		elif ( fetch[0:6] == "000000" ):	#sub
 			if ( debugMode ):
-				print("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "sub $" + str(int(fetch[16:21],2)) + ",$" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) )
+				print("PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "sub $" + str(int(fetch[16:21],2)) + ",$" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) )
 			PC += 1
 			DIC += 1
-			register[int(fetch[16:21], 2)] = registers[int(fetch[6:11], 2)] - registers[int(fetch[11:16], 2)]
+			registers[int(fetch[16:21], 2)] = registers[int(fetch[6:11], 2)] - registers[int(fetch[11:16], 2)]
 		elif ( fetch[0:6] == "000100" ):	#beq
+			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) )
 			if ( debugMode ):
-				print( "PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "beq $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
+				print( "PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "beq $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
 			PC += 1
 			DIC += 1
-			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) )
 			if ( registers[int(fetch[6:11], 2)] == registers[int(fetch[11:16], 2)] ):
 				PC = PC + imm
 		else:
@@ -67,16 +67,14 @@ def main():
 	for line in inputFile:
 		if ( line == "\n" or line[0] =='#' ):              # empty lines and comments ignored
 			continue
-		for index in line:			#This loop will remove any comments. 
-			if ( line[index] == "#" ):
-				line = line[:index] 
+
 		line = line.replace( '\n', '' )	# Removes new line characters
 		instructionsHex.append( line )
 		line = format( int( line, 16 ), "032b" )	# The int function converts the hex instruction into some numerical value, then format converts it into a binary string 
 		instructions.append( line )
 	inputFile.close()
 	debugMode = True if  int( input( "1 = debug mode         2 = normal execution\n" ) ) == 1 else False
-	simulate( instructions, debugMode )
+	simulate( instructions, instructionsHex, debugMode )
 
 
 if __name__ == "__main__":
