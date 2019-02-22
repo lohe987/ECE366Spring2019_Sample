@@ -33,7 +33,7 @@ def simulate(memory, I):
             print("PC " + str(PC) + ":  ori $" + str(Rt) + ",$" + str(Rs) + "," + str(imm))
             Register[Rt] = Register[Rs] | imm
             PC += 4
-            print("result: $" + str(Rt) + "=" + str(Register[Rt]))
+            print("  result: $" + str(Rt) + "=" + str(Register[Rt]))
         elif(fetch[0:6] == "001000"):   # ADDI instruction
             imm = process2Comp(fetch[16:32])
             Rs = int(fetch[6:11],2)
@@ -41,7 +41,7 @@ def simulate(memory, I):
             print("PC " + str(PC) + ":  addi $" + str(Rt) +  ",$" +  str(Rs) + "," +  str(imm))
             Register[Rt] = Register[Rs] + imm
             PC += 4
-            print("result: $" + str(Rt) + "=" + str(Register[Rt]))
+            print("  result: $" + str(Rt) + "=" + str(Register[Rt]))
         elif(fetch[0:6] == "000000" and fetch[21:32] == "00000100010"):     # SUB instruction
             Rd = int(fetch[16:21],2)
             Rs = int(fetch[6:11],2)
@@ -49,6 +49,7 @@ def simulate(memory, I):
             print("PC " + str(PC) + ":  sub $" + str(Rd) + ",$" + str(Rs) + ",$" + str(Rt))
             Register[Rd] = Register[Rs] - Register[Rt]
             PC += 4
+            print("  result: $" + str(Rd) + "=" + str(Register[Rd]))
         elif(fetch[0:6] == "000100"):   # BEQ instruction
             offset = process2Comp(fetch[16:32])
             Rs = int(fetch[6:11],2)
@@ -56,8 +57,10 @@ def simulate(memory, I):
             print("PC " + str(PC) + ":  beq $" + str(Rs) + ",$" + str(Rt) + "," + str(offset))
             if (Register[Rs] == Register[Rt]):
                 PC = PC + 4 + (4*offset)
+                print("  result: branch Taken")
             else:
                 PC = PC + 4
+                print("  result: branch Not Taken")
         
 
         else:
