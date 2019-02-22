@@ -33,6 +33,7 @@ def simulate(memory, I):
             print("PC " + str(PC) + ":  ori $" + str(Rt) + ",$" + str(Rs) + "," + str(imm))
             Register[Rt] = Register[Rs] | imm
             PC += 4
+            print("result: $" + str(Rt) + "=" + str(Register[Rt]))
         elif(fetch[0:6] == "001000"):   # ADDI instruction
             imm = process2Comp(fetch[16:32])
             Rs = int(fetch[6:11],2)
@@ -40,6 +41,7 @@ def simulate(memory, I):
             print("PC " + str(PC) + ":  addi $" + str(Rt) +  ",$" +  str(Rs) + "," +  str(imm))
             Register[Rt] = Register[Rs] + imm
             PC += 4
+            print("result: $" + str(Rt) + "=" + str(Register[Rt]))
         elif(fetch[0:6] == "000000" and fetch[21:32] == "00000100010"):     # SUB instruction
             Rd = int(fetch[16:21],2)
             Rs = int(fetch[6:11],2)
