@@ -56,6 +56,12 @@ def simulate( instructions, instructionsHex, debugMode ):
 		else:
 			print( "Unsupported instruction, ending simulator..." )
 			programDone = True
+	print( "Simulation complete. Now printing register information:" )
+	counter = 0
+	for register in registers:
+		print( "Register " + str( counter ) + ": " + str( register ) )
+		counter += 1
+	print( "Dynamic instruction count: " + str( DIC ) )
 
 
 def main():
