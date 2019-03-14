@@ -1,0 +1,25 @@
+
+# DC ISA
+# Thanos snapped the x86 ISA, so now instruction length
+# is only 8 bits
+
+
+
+
+0x45		# init 5	01000101
+0x54		# add R1,R0	01010100
+0x69		# sub R2,R1	01101001
+0x7f		# addi R3,3	01111111
+0x9f		# beq R1,-8 	10011111
+0x4a		# init -6	01001010
+0xcb		# slt R2,R3	11001011
+0xd6		# xor R1,R2	11010110
+0xeb		# dc R2,R3	11101011
+0x16		# load R1,R2	00010110
+0x01		# store R0,R1	00000001
+0x21		# j 1		00100001
+0x4a		# init -6	01001010
+
+
+
+0xff	 	# exit		11111111
