@@ -7,26 +7,30 @@
 #       if rs != rt, pc = pc+4
 
 # run with Python3
-# There's probably poor coding habits in this. 
+# There's some poor coding habits in this. 
 
 from math import log, ceil
 import random 
 
-MEM_SPACE = 1024	#word accessible memory space 
+MEM_SPACE = 1024	#4-byte word accessible memory space 
 Memory = [0 for i in range(MEM_SPACE)] 
+
+# This memory space will correspond to the address spaces 0x2000 - 0x3000 when used by lw (and sw if it were implemented)
+# 0x1000 == 0d4096, and 4096 / 4 == 1024, thus 1024 words
 
 class Block:
 	def __init__(self, _wordsPerBlock, _whichSet):
 		self.data = [ 0 for i in range( _wordsPerBlock ) ]
 		self.size = _wordsPerBlock
-		self.setIndex = format( whichSet, 'b' )
+		self.setIndex = format( whichSet, 'b' ) # Since this is a direct-mapped cache, I can get away with combining the block and set class
+							# Blocks and set are not the same thing though. 
 		self.valid = False 
 		self.tag = "undefined"
-	def LoadBlock(self, addr, tag ):
+	def LoadBlock(self, memIndex, tag ):
 		self.tag = tag
 		self.valid = True
 		for i in range( self.size ): 
-			self.data[i] = Memory[i + (int(addr,2) - 8192)]
+			self.data[i] = Memory[i +  memIndex ] 
 		
 
 class Cache:
@@ -36,9 +40,20 @@ class Cache:
 			tempBlock = Block( _wordsPerBlock, i )
 			self.Cache.append( tempBlock )
 		self.wordsPerBlock = _wordsPerBlock
+		self.blockCount = 8 
 
-	def AccessCache( self, addr, outFile):
+	#Have this function return 1 if valid && tag match, -1 if not valid && tag doesn't match
+	def CheckBlockTag( self, tag ):
+		pass
+
+	def AccessCache( self, addr, outFile):		
 		inBlkOffset = addr[-( 2 + ceil( log( self.wordsPerBlock, 2) ) ): -2]
+		setIndex = addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]:-( 2 + ceil( log( self.wordsPerBlock, 2) ) )]
+		tag = addr[:-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]
+		zeroString = ""
+		for i in range( ceil( log( self.wordsPerBlock, 2 ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0
+			zeroString = zeroString + "0"  
+		memIndex = int( tag + setIndex + zeroString, 2 ) - 2048
 
 def simulate( instructions, instructionsHex, debugMode, program):
 
