@@ -38,8 +38,11 @@ class Block:
 			return -1
 		if ( self.tag != tag ):
 			return -1
-		return 1	
+		return 1
+	def ReadBlock( self, offset ):
+		return self.data[offset]
 
+# A direct mapped cache with 8 blocks in it, but the user can chose the words per block
 class Cache:
 	def __init__(self, _wordsPerBlock):
 		self.Cache = [] 		
@@ -51,14 +54,17 @@ class Cache:
 
 	def AccessCache( self, addr, outFile):		
 		inBlkOffset = addr[-( 2 + ceil( log( self.wordsPerBlock, 2) ) ): -2]
-		setIndex = int( addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]:-( 2 + ceil( log( self.wordsPerBlock, 2) ) )], 2 )
+		setIndex = int( addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) ):-( 2 + ceil( log( self.wordsPerBlock, 2) ) )], 2 )
 		tag = addr[:-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]
 		if ( self.Cache[setIndex].CheckBlockTag( tag ) == -1 ):
+			outFile.write( "Cache miss, loading correct block from deeper memory.\n" )
 			zeroString = ""
-			for i in range( ceil( log( self.wordsPerBlock, 2 ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0
-				zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? 
-			memIndex = int( ( tag + setIndex + zeroString ), 2 ) - 2048
+			for i in range( ceil( log( self.wordsPerBlock, 2 ) ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0; 0 should be a rejected number though
+				zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? Hopefully it doesn't...
+			memIndex = int( ( tag + format( setIndex, "b" ) + zeroString ), 2 ) - 2048
 			self.Cache[setIndex].LoadBlock( memIndex, tag )
+		data = self.Cache[setIndex].ReadBlock( inBlkOffset )
+		return data 
 
 def simulate( instructions, instructionsHex, debugMode, program):
 
@@ -73,6 +79,8 @@ def simulate( instructions, instructionsHex, debugMode, program):
 	fourCycles = 0      
 	fiveCycles = 0		#no five cycle instructions supported 
 	pipelineCycles = 4
+
+	DM_Cache = Cache( 4 )
 
 	print( "Starting simulation..." )
 	while ( not( programDone ) ):
