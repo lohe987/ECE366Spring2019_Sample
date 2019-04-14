@@ -31,7 +31,14 @@ class Block:
 		self.valid = True
 		for i in range( self.size ): 
 			self.data[i] = Memory[i +  memIndex ] 
-		
+
+	#Have this function return 1 if valid && tag match, -1 if not valid && tag doesn't match
+	def CheckBlockTag( self, tag ):
+		if ( self.valid == False ): 
+			return -1
+		if ( self.tag != tag ):
+			return -1
+		return 1	
 
 class Cache:
 	def __init__(self, _wordsPerBlock):
@@ -42,18 +49,16 @@ class Cache:
 		self.wordsPerBlock = _wordsPerBlock
 		self.blockCount = 8 
 
-	#Have this function return 1 if valid && tag match, -1 if not valid && tag doesn't match
-	def CheckBlockTag( self, tag ):
-		pass
-
 	def AccessCache( self, addr, outFile):		
 		inBlkOffset = addr[-( 2 + ceil( log( self.wordsPerBlock, 2) ) ): -2]
-		setIndex = addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]:-( 2 + ceil( log( self.wordsPerBlock, 2) ) )]
+		setIndex = int( addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]:-( 2 + ceil( log( self.wordsPerBlock, 2) ) )], 2 )
 		tag = addr[:-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]
-		zeroString = ""
-		for i in range( ceil( log( self.wordsPerBlock, 2 ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0
-			zeroString = zeroString + "0"  
-		memIndex = int( tag + setIndex + zeroString, 2 ) - 2048
+		if ( self.Cache[setIndex].CheckBlockTag( tag ) == -1 ):
+			zeroString = ""
+			for i in range( ceil( log( self.wordsPerBlock, 2 ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0
+				zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? 
+			memIndex = int( ( tag + setIndex + zeroString ), 2 ) - 2048
+			self.Cache[setIndex].LoadBlock( memIndex, tag )
 
 def simulate( instructions, instructionsHex, debugMode, program):
 
