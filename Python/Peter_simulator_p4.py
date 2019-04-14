@@ -63,7 +63,7 @@ class Cache:
 				zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? Hopefully it doesn't...
 			memIndex = int( ( tag + format( setIndex, "b" ) + zeroString ), 2 ) - 2048
 			self.Cache[setIndex].LoadBlock( memIndex, tag )
-		data = self.Cache[setIndex].ReadBlock( inBlkOffset )
+		data = self.Cache[setIndex].ReadBlock( int( inBlkOffset, 2 ) )
 		return data 
 
 def simulate( instructions, instructionsHex, debugMode, program):
