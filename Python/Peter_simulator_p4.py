@@ -22,7 +22,7 @@ class Block:
 	def __init__(self, _wordsPerBlock, _whichSet):
 		self.data = [ 0 for i in range( _wordsPerBlock ) ]
 		self.size = _wordsPerBlock
-		self.setIndex = format( whichSet, 'b' ) # Since this is a direct-mapped cache, I can get away with combining the block and set class
+		self.setIndex = format( _whichSet, 'b' ) # Since this is a direct-mapped cache, I can get away with combining the block and set class
 							# Blocks and set are not the same thing though. 
 		self.valid = False 
 		self.tag = "undefined"
