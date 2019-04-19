@@ -8,6 +8,10 @@
 
 # run with Python3
 # There's some poor coding habits in this. 
+# I'll probably switch over to using 4 spaces for Python in future code since python uses so much indentation
+
+# I added a variable to keep track of the pipeline cycle count and wrote some really basic bookkeeping code.
+# It doesn't handle any of the hazards. 
 
 from math import log, ceil
 import random 
@@ -30,7 +34,7 @@ class Block:
 		self.tag = tag
 		self.valid = True
 		for i in range( self.size ): 
-			self.data[i] = Memory[i +  memIndex ] 
+			self.data[i] = Memory[i +  memIndex] 
 
 	#Have this function return 1 if valid && tag match, -1 if not valid && tag doesn't match
 	def CheckBlockTag( self, tag ):
@@ -51,6 +55,7 @@ class Cache:
 			self.Cache.append( tempBlock )
 		self.wordsPerBlock = _wordsPerBlock
 		self.blockCount = 8 
+		# There are a lot of other things that the Cache should keep track of. 
 
 	def AccessCache( self, addr, outFile):		
 		inBlkOffset = addr[-( 2 + ceil( log( self.wordsPerBlock, 2) ) ): -2]
@@ -59,8 +64,9 @@ class Cache:
 		if ( self.Cache[setIndex].CheckBlockTag( tag ) == -1 ):
 			outFile.write( "Cache miss, loading correct block from deeper memory.\n" )
 			zeroString = ""
-			for i in range( ceil( log( self.wordsPerBlock, 2 ) ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0; 0 should be a rejected number though
-				zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? Hopefully it doesn't...
+			if ( self.wordsPerBlock != 1 ): 	#This is easier than trying to think it through. 
+				for i in range( ceil( log( self.wordsPerBlock, 2 ) ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0; 0 should be a rejected number though
+					zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? Hopefully it doesn't...
 			memIndex = int( ( tag + format( setIndex, "b" ) + zeroString ), 2 ) - 2048
 			self.Cache[setIndex].LoadBlock( memIndex, tag )
 		data = self.Cache[setIndex].ReadBlock( int( inBlkOffset, 2 ) )
@@ -77,7 +83,7 @@ def simulate( instructions, instructionsHex, debugMode, program):
 	Cycle = 0
 	threeCycles = 0     
 	fourCycles = 0      
-	fiveCycles = 0		#no five cycle instructions supported 
+	fiveCycles = 0	
 	pipelineCycles = 4
 
 	DM_Cache = Cache( 4 )
@@ -85,9 +91,12 @@ def simulate( instructions, instructionsHex, debugMode, program):
 	print( "Starting simulation..." )
 	while ( not( programDone ) ):
 		fetch = instructions[PC]
-		if ( fetch[0:32] == "00010000000000001111111111111111" ):
+		if ( fetch[0:32] == "00010000000000001111111111111111" ): 	#This is technically a branch instruction
 			programDone = True
 			DIC += 1
+			threeCycles += 3
+			Cycle += 3
+			pipelineCycles += 1
 		elif ( fetch[0:6] == "001000" ):	#addi
 			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) ) #range of number for 16 bit unsigned is 0 to 65535
 			if ( debugMode ):
@@ -152,6 +161,22 @@ def simulate( instructions, instructionsHex, debugMode, program):
 			DIC += 1
 			if ( registers[int(fetch[6:11], 2)] == registers[int(fetch[11:16], 2)] ):
 				PC = PC + imm
+		elif ( fetch[0:6] == "100011" ):	#lw
+			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) )
+			if( debugMode ):
+				print("Cycle " + str(Cycle) + ":")
+				print("PC =" + str(PC*4) + " Instruction: 0x" +  InstructionHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")" )	
+				print("Takes 5 cycles for multi-cycle\n")
+			outFile.write("Cycle " + str(Cycle) + ":\n")
+			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  InstructionHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")\n" )	
+			outFile.write("Takes 5 cycles for multi-cycle\n\n")
+			addr = bin( int( fetch[11:16], 2 ) + imm ) 
+			Register[int(fetch[6:11],2)] = DM_Cache.AccessCache( addr, outFile )
+			Cycle += 5
+			fiveCycles += 1
+			pipelineCycles += 1
+			PC += 1
+			DIC += 1
 		else:
 			print( "Unsupported instruction, ending simulator..." )
 			programDone = True
