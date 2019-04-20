@@ -5,13 +5,20 @@
 #   beq: I-type, with the following functionality:
 #       if rs == rt, pc = pc+4+(imm<<2)
 #       if rs != rt, pc = pc+4
+#   lw support has been added 
 
 # run with Python3
 # There's some poor coding habits in this. 
 # I'll probably switch over to using 4 spaces for Python in future code since python uses so much indentation
 
 # I added a variable to keep track of the pipeline cycle count and wrote some really basic bookkeeping code.
-# It doesn't handle any of the hazards. 
+# It doesn't handle any of the hazards.
+
+# The cache configuration that's provided in the sample code has 8 blocks, thus 8 sets since it's a direct mapped cache.
+# Since it's a direct mapped cache, I didn't bother creating a set class, but it's something that should be considered
+# if you end up using this sample code as your base.
+# The sample code already supports the user choosing how many words are in a block, but the words are always 4 bytes; 
+# other dimensions of the cache 
 
 from math import log, ceil
 import random 
@@ -49,17 +56,21 @@ class Block:
 # A direct mapped cache with 8 blocks in it, but the user can chose the words per block
 class Cache:
 	def __init__(self, _wordsPerBlock):
-		self.Cache = [] 		
+		self.Cache = [] 	#Declares cache to be an empty list		
 		for i in range( 8 ): 		
 			tempBlock = Block( _wordsPerBlock, i )
-			self.Cache.append( tempBlock )
+			self.Cache.append( tempBlock )  #Adds a block to the end of the list, but caches should really be made up of sets
 		self.wordsPerBlock = _wordsPerBlock
 		self.blockCount = 8 
-		# There are a lot of other things that the Cache should keep track of. 
+		# There are a lot of other things that the Cache should keep track of.
+		# Try to have each level of the data structure also contain information that you think you'd need at that level. 
 
 	def AccessCache( self, addr, outFile):		
 		inBlkOffset = addr[-( 2 + ceil( log( self.wordsPerBlock, 2) ) ): -2]
+		# 8 sets means I need 8 patterns from the address so I know which set to access, thus 3 bits of the address are devoted to set index. 
 		setIndex = int( addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) ):-( 2 + ceil( log( self.wordsPerBlock, 2) ) )], 2 )
+		# Negative values are kind of nifty to use in Python for accessing indices from right to left instead of the default left to right
+		# The tail of the list has the index -1, and it basically works the same way as the value grows in magnitude. 
 		tag = addr[:-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]
 		if ( self.Cache[setIndex].CheckBlockTag( tag ) == -1 ):
 			outFile.write( "Cache miss, loading correct block from deeper memory.\n" )
@@ -86,7 +97,7 @@ def simulate( instructions, instructionsHex, debugMode, program):
 	fiveCycles = 0	
 	pipelineCycles = 4
 
-	DM_Cache = Cache( 4 )
+	DM_Cache = Cache( 4 ) #Create a direct mapped cache that has 4 words per block
 
 	print( "Starting simulation..." )
 	while ( not( programDone ) ):
@@ -170,7 +181,7 @@ def simulate( instructions, instructionsHex, debugMode, program):
 			outFile.write("Cycle " + str(Cycle) + ":\n")
 			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  InstructionHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")\n" )	
 			outFile.write("Takes 5 cycles for multi-cycle\n\n")
-			addr = bin( int( fetch[11:16], 2 ) + imm ) 
+			addr = format( int( fetch[11:16], 2 ) + imm, "032b" ) 
 			Register[int(fetch[6:11],2)] = DM_Cache.AccessCache( addr, outFile )
 			Cycle += 5
 			fiveCycles += 1
