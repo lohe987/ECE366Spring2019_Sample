@@ -73,13 +73,15 @@ class Cache:
 		# The tail of the list has the index -1, and it basically works the same way as the value grows in magnitude. 
 		tag = addr[:-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]
 		if ( self.Cache[setIndex].CheckBlockTag( tag ) == -1 ):
-			outFile.write( "Cache miss, loading correct block from deeper memory.\n" )
+			outFile.write( "Cache miss, loading correct block from deeper memory...\n" )
 			zeroString = ""
 			if ( self.wordsPerBlock != 1 ): 	#This is easier than trying to think it through. 
 				for i in range( ceil( log( self.wordsPerBlock, 2 ) ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0; 0 should be a rejected number though
 					zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? Hopefully it doesn't...
-			memIndex = int( ( tag + format( setIndex, "b" ) + zeroString ), 2 ) - 2048
+			memIndex = ( int( ( tag + format( setIndex, "b" ) + zeroString ), 2 ) // 4 ) - 2048
 			self.Cache[setIndex].LoadBlock( memIndex, tag )
+		else:
+			outFile.write( "Cache hit! Accessing data now...\n" )
 		data = self.Cache[setIndex].ReadBlock( int( inBlkOffset, 2 ) )
 		return data 
 
@@ -102,6 +104,7 @@ def simulate( instructions, instructionsHex, debugMode, program):
 	print( "Starting simulation..." )
 	while ( not( programDone ) ):
 		fetch = instructions[PC]
+		registers[0] = 0 
 		if ( fetch[0:32] == "00010000000000001111111111111111" ): 	#This is technically a branch instruction
 			programDone = True
 			DIC += 1
@@ -176,10 +179,10 @@ def simulate( instructions, instructionsHex, debugMode, program):
 			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) )
 			if( debugMode ):
 				print("Cycle " + str(Cycle) + ":")
-				print("PC =" + str(PC*4) + " Instruction: 0x" +  InstructionHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")" )	
+				print("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")" )	
 				print("Takes 5 cycles for multi-cycle\n")
 			outFile.write("Cycle " + str(Cycle) + ":\n")
-			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  InstructionHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")\n" )	
+			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")\n" )	
 			outFile.write("Takes 5 cycles for multi-cycle\n\n")
 			addr = format( int( fetch[11:16], 2 ) + imm, "032b" ) 
 			Register[int(fetch[6:11],2)] = DM_Cache.AccessCache( addr, outFile )
