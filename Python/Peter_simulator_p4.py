@@ -179,10 +179,10 @@ def simulate( instructions, instructionsHex, debugMode, program):
 			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) )
 			if( debugMode ):
 				print("Cycle " + str(Cycle) + ":")
-				print("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")" )	
+				print("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( int(fetch[11:16],2) ) + ")" )	
 				print("Takes 5 cycles for multi-cycle\n")
 			outFile.write("Cycle " + str(Cycle) + ":\n")
-			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( Register[int(fetch[11:16],2)] ) + ")\n" )	
+			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( int(fetch[11:16],2) ) + ")\n" )	
 			outFile.write("Takes 5 cycles for multi-cycle\n\n")
 			addr = format( int( fetch[11:16], 2 ) + imm, "032b" ) 
 			Register[int(fetch[6:11],2)] = DM_Cache.AccessCache( addr, outFile )
