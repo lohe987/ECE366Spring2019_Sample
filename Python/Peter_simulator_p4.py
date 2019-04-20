@@ -38,6 +38,7 @@ class Block:
 		self.valid = False 
 		self.tag = "undefined"
 	def LoadBlock(self, memIndex, tag ):
+		print( "memIndex: " + str( memIndex ) )
 		self.tag = tag
 		self.valid = True
 		for i in range( self.size ): 
@@ -65,20 +66,20 @@ class Cache:
 		# There are a lot of other things that the Cache should keep track of.
 		# Try to have each level of the data structure also contain information that you think you'd need at that level. 
 
-	def AccessCache( self, addr, outFile):		
+	def AccessCache( self, addr, outFile):	
 		inBlkOffset = addr[-( 2 + ceil( log( self.wordsPerBlock, 2) ) ): -2]
 		# 8 sets means I need 8 patterns from the address so I know which set to access, thus 3 bits of the address are devoted to set index. 
 		setIndex = int( addr[-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) ):-( 2 + ceil( log( self.wordsPerBlock, 2) ) )], 2 )
 		# Negative values are kind of nifty to use in Python for accessing indices from right to left instead of the default left to right
-		# The tail of the list has the index -1, and it basically works the same way as the value grows in magnitude. 
+		# The tail of the list has the index -1 (I think...), and it basically works the same way as the value grows in magnitude. 
 		tag = addr[:-( 2 + 3 + ceil( log( self.wordsPerBlock, 2) ) )]
 		if ( self.Cache[setIndex].CheckBlockTag( tag ) == -1 ):
 			outFile.write( "Cache miss, loading correct block from deeper memory...\n" )
 			zeroString = ""
-			if ( self.wordsPerBlock != 1 ): 	#This is easier than trying to think it through. 
+			if ( self.wordsPerBlock != 1 ): 	#This is easier than trying to think through the issue mentioned below 
 				for i in range( ceil( log( self.wordsPerBlock, 2 ) ) ):	#There might be a bug here with this loop if wordsPerBlock is 1 or 0; 0 should be a rejected number though
 					zeroString = zeroString + "0"  	#Does it execute at all if wordsPerBlock is 1? Hopefully it doesn't...
-			memIndex = ( int( ( tag + format( setIndex, "b" ) + zeroString ), 2 ) // 4 ) - 2048
+			memIndex = ( int( ( tag + format( setIndex, "03b" ) + zeroString + "00" ), 2 ) // 4 ) - 2048
 			self.Cache[setIndex].LoadBlock( memIndex, tag )
 		else:
 			outFile.write( "Cache hit! Accessing data now...\n" )
@@ -132,9 +133,9 @@ def simulate( instructions, instructionsHex, debugMode, program):
 				print("Cycle " + str(Cycle) + " for multi-cycle:")
 				print( "PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "ori $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
 				print("Takes 4 cycles for multi-cycle\n")
-			outFile.write( "Cycle " + str(Cycle) + " for multi-cycle:" )
-			outFile.write( "PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "ori $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) )
-			outFile.write( "Takes 4 cycles for multi-cycle\n" )
+			outFile.write( "Cycle " + str(Cycle) + " for multi-cycle:\n" )
+			outFile.write( "PC = " + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "ori $" + str(int(fetch[6:11],2)) + ",$" + str(int(fetch[11:16],2)) + "," + str(imm) + "\n" )
+			outFile.write( "Takes 4 cycles for multi-cycle\n\n" )
 			imm = int( fetch[16:32],2 )	#I'm basically ignoring the fact that this could be a negative number since it we're zero-extending it.
 			PC += 1
 			Cycle += 4
@@ -178,14 +179,14 @@ def simulate( instructions, instructionsHex, debugMode, program):
 		elif ( fetch[0:6] == "100011" ):	#lw
 			imm = int( fetch[16:32],2 ) if fetch[16] == '0' else -( 65536 - int( fetch[16:32],2 ) )
 			if( debugMode ):
-				print("Cycle " + str(Cycle) + ":")
-				print("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( int(fetch[11:16],2) ) + ")" )	
+				print("Cycle " + str(Cycle) + "for multi-cycle:")
+				print("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[11:16],2)) + ", 0x" + hex( imm ) + "($" + str( int(fetch[6:11],2) ) + ")" )	
 				print("Takes 5 cycles for multi-cycle\n")
-			outFile.write("Cycle " + str(Cycle) + ":\n")
-			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[6:11],2)) + ", 0x" + hex( imm ) + "($" + str( int(fetch[11:16],2) ) + ")\n" )	
+			outFile.write("Cycle " + str(Cycle) + "for multi-cycle:\n")
+			outFile.write("PC =" + str(PC*4) + " Instruction: 0x" +  instructionsHex[PC] + " :" + "lw $" + str(int(fetch[11:16],2)) + ", 0x" + hex( imm ) + "($" + str( int(fetch[6:11],2) ) + ")\n" )	
 			outFile.write("Takes 5 cycles for multi-cycle\n\n")
-			addr = format( int( fetch[11:16], 2 ) + imm, "032b" ) 
-			Register[int(fetch[6:11],2)] = DM_Cache.AccessCache( addr, outFile )
+			addr = format( registers[int( fetch[6:11], 2 )] + imm, "032b" ) 
+			registers[int(fetch[11:16],2)] = DM_Cache.AccessCache( addr, outFile )
 			Cycle += 5
 			fiveCycles += 1
 			pipelineCycles += 1
