@@ -38,7 +38,7 @@ class Block:
 		self.valid = False 
 		self.tag = "undefined"
 	def LoadBlock(self, memIndex, tag ):
-		print( "memIndex: " + str( memIndex ) )
+		#print( "memIndex: " + str( memIndex ) )
 		self.tag = tag
 		self.valid = True
 		for i in range( self.size ): 
